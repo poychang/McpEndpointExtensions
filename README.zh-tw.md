@@ -25,7 +25,13 @@ McpEndpointExtensions 是一個小型 ASP.NET Core 擴充程式庫，可讓單�
 
 ## 安裝
 
-從 ASP.NET Core MCP server 專案參考此程式庫專案：
+從 NuGet 安裝：
+
+```powershell
+dotnet add package ModelContextProtocol.Extensions.AspNetCore.Endpoints
+```
+
+或從 ASP.NET Core MCP server 專案直接參考此程式庫專案：
 
 ```xml
 <ProjectReference Include="..\..\src\McpEndpointExtensions.csproj" />
@@ -104,6 +110,26 @@ dotnet build ModelContextProtocol.slnx
 ```
 
 此 solution 已使用 .NET SDK `10.0.300` 驗證。
+
+## NuGet 發佈流程
+
+此 repository 透過 GitHub Actions 發佈套件。
+
+1. CI workflow (`.github/workflows/ci.yml`) 會在 push/PR 時執行 restore、build、test 與 pack 檢查。
+2. 發佈 workflow (`.github/workflows/publish-nuget.yml`) 會在推送版本 tag（例如 `v1.2.3`）或手動觸發時執行。
+3. 發佈作業使用 `dotnet nuget push` 發佈到 `https://api.nuget.org/v3/index.json`。
+
+### 必要的 GitHub 設定
+
+發佈前請先設定以下 secret：
+
+- `NUGET_API_KEY`：具備套件推送權限的 NuGet API key。
+
+建議設定流程：
+
+1. 建立名為 `nuget-publish` 的 GitHub environment。
+2. 將 `NUGET_API_KEY` 設定為 environment secret。
+3. 為該 environment 設定審核者與/或分支、標籤保護規則。
 
 ## 授權
 

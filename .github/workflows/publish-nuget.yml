@@ -1,0 +1,69 @@
+name: Publish NuGet
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version without leading v (e.g., 1.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: nuget-publish
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine package version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            PACKAGE_VERSION="${{ inputs.version }}"
+          fi
+          echo "version=${PACKAGE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Restore
+        run: dotnet restore ./ModelContextProtocol.slnx
+
+      - name: Build
+        run: dotnet build ./ModelContextProtocol.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ./ModelContextProtocol.slnx --configuration Release --no-build --no-restore
+
+      - name: Pack
+        run: |
+          dotnet pack ./src/McpEndpointExtensions.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts \
+            -p:PackageVersion=${{ steps.version.outputs.version }}
+      - name: Push package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "${NUGET_API_KEY}" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
+          dotnet nuget push "artifacts/*.snupkg" \
+            --api-key "${NUGET_API_KEY}" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate

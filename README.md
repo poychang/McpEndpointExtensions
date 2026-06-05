@@ -25,7 +25,13 @@ At runtime, the library reads the current `HttpContext.Request.Path` and uses th
 
 ## Installation
 
-Reference the library project from an ASP.NET Core MCP server project:
+Install from NuGet:
+
+```powershell
+dotnet add package ModelContextProtocol.Extensions.AspNetCore.Endpoints
+```
+
+Or reference the library project directly from an ASP.NET Core MCP server project:
 
 ```xml
 <ProjectReference Include="..\..\src\McpEndpointExtensions.csproj" />
@@ -104,6 +110,26 @@ dotnet build ModelContextProtocol.slnx
 ```
 
 The solution was validated with .NET SDK `10.0.300`.
+
+## NuGet publish workflow
+
+This repository publishes the package through GitHub Actions.
+
+1. CI workflow (`.github/workflows/ci.yml`) runs on push/PR and performs restore, build, test, and pack checks.
+2. Publish workflow (`.github/workflows/publish-nuget.yml`) runs when a version tag is pushed (for example `v1.2.3`) or via manual dispatch.
+3. The publish job uses `dotnet nuget push` against `https://api.nuget.org/v3/index.json`.
+
+### Required GitHub configuration
+
+Add the following secret before publishing:
+
+- `NUGET_API_KEY`: NuGet API key with package push permission.
+
+Recommended setup path:
+
+1. Create a GitHub environment named `nuget-publish`.
+2. Add `NUGET_API_KEY` as an environment secret.
+3. Protect the environment with reviewers and/or branch-tag rules.
 
 ## License
 
