@@ -1,0 +1,6 @@
+@McpEndpointServer_HostAddress = http://localhost:5288
+
+GET {{McpEndpointServer_HostAddress}}/
+Accept: application/json
+
+###
