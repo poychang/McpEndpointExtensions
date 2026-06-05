@@ -5,6 +5,9 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>true</IsPackable>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
         <PackageId>ModelContextProtocol.Extensions.AspNetCore.Endpoints</PackageId>
         <Title>ModelContextProtocol.Extensions.AspNetCore.Endpoints</Title>
         <Authors>poychang</Authors>
@@ -13,6 +16,7 @@
         <PackageProjectUrl>https://github.com/poychang/McpEndpointExtensions</PackageProjectUrl>
         <RepositoryUrl>https://github.com/poychang/McpEndpointExtensions</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <PackageTags>mcp;model-context-protocol;aspnetcore;endpoints</PackageTags>
     </PropertyGroup>
 
