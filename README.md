@@ -1,6 +1,6 @@
 # McpEndpointExtensions
 
-[繁體中文](README.zh-tw.md)
+[繁體中文](https://github.com/poychang/McpEndpointExtensions/blob/main/README.zh-tw.md)
 
 McpEndpointExtensions is a small ASP.NET Core extension library for hosting multiple Model Context Protocol (MCP) Streamable HTTP endpoints from one application while exposing a different tool set from each endpoint.
 
@@ -28,7 +28,7 @@ At runtime, the library reads the current `HttpContext.Request.Path` and uses th
 Install from NuGet:
 
 ```powershell
-dotnet add package ModelContextProtocol.Extensions.AspNetCore.Endpoints
+dotnet add package PC.ModelContextProtocol.Extensions.AspNetCore.Endpoints
 ```
 
 Or reference the library project directly from an ASP.NET Core MCP server project:

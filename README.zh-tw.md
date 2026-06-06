@@ -1,6 +1,6 @@
 # McpEndpointExtensions
 
-[English](README.md)
+[English](https://github.com/poychang/McpEndpointExtensions/blob/main/README.md)
 
 McpEndpointExtensions 是一個小型 ASP.NET Core 擴充程式庫，可讓單一應用程式同時裝載多個 Model Context Protocol (MCP) Streamable HTTP endpoint，並讓每個 endpoint 暴露不同的工具集合。
 
@@ -28,7 +28,7 @@ McpEndpointExtensions 是一個小型 ASP.NET Core 擴充程式庫，可讓單�
 從 NuGet 安裝：
 
 ```powershell
-dotnet add package ModelContextProtocol.Extensions.AspNetCore.Endpoints
+dotnet add package PC.ModelContextProtocol.Extensions.AspNetCore.Endpoints
 ```
 
 或從 ASP.NET Core MCP server 專案直接參考此程式庫專案：

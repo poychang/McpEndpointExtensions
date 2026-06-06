@@ -7,9 +7,10 @@
         <IsPackable>true</IsPackable>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-        <PackageId>ModelContextProtocol.Extensions.AspNetCore.Endpoints</PackageId>
-        <Title>ModelContextProtocol.Extensions.AspNetCore.Endpoints</Title>
+        <PackageId>PC.ModelContextProtocol.Extensions.AspNetCore.Endpoints</PackageId>
+        <Title>PC.ModelContextProtocol.Extensions.AspNetCore.Endpoints</Title>
         <Authors>poychang</Authors>
         <Description>ASP.NET Core extensions for hosting multiple Model Context Protocol (MCP) Streamable HTTP endpoints with route-level tool isolation.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -31,6 +32,7 @@
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\README.zh-tw.md" Pack="true" PackagePath="\" />
         <None Include="..\LICENSE" Pack="true" PackagePath="\" />
     </ItemGroup>
 
