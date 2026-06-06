@@ -133,4 +133,4 @@ dotnet build ModelContextProtocol.slnx
 
 ## 授權
 
-此 repository 目前未包含 license file。
+此專案採用 MIT 授權。詳細內容請參閱 [LICENSE](LICENSE)。
