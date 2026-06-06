@@ -12,7 +12,7 @@ Use it when a single MCP server needs route-level tool isolation, for example:
 
 ## Project Status
 
-This repository currently contains the library source and a runnable sample application. The library targets `net10.0` and depends on `ModelContextProtocol.AspNetCore` `1.3.0`.
+This repository contains the library source, a runnable ASP.NET Core sample application, and MSTest coverage for the endpoint registration and per-route tool filtering behavior. The library targets `net8.0`, `net9.0`, and `net10.0`, and depends on `ModelContextProtocol.AspNetCore` `1.4.0`.
 
 ## How It Works
 
@@ -99,7 +99,7 @@ public sealed class Domain1Tools
 
 - `src/` - the `McpEndpointExtensions` library.
 - `samples/McpEndpointServer/` - a runnable ASP.NET Core sample that demonstrates multiple MCP endpoints.
-- `tests/` - reserved for tests.
+- `tests/` - MSTest test coverage for endpoint options, route mapping, service registration, and MCP tool handler behavior.
 
 ## Build
 

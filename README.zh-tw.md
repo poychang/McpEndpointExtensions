@@ -12,7 +12,7 @@ McpEndpointExtensions 是一個小型 ASP.NET Core 擴充程式庫，可讓單�
 
 ## 專案狀態
 
-此 repository 目前包含程式庫原始碼與可執行的範例應用程式。程式庫目標框架為 `net10.0`，並依賴 `ModelContextProtocol.AspNetCore` `1.3.0`。
+此 repository 包含程式庫原始碼、可執行的 ASP.NET Core 範例應用程式，以及用於 endpoint 註冊與依路由篩選工具行為的 MSTest 測試。程式庫目標框架為 `net8.0`、`net9.0`、`net10.0`，並依賴 `ModelContextProtocol.AspNetCore` `1.4.0`。
 
 ## 運作方式
 
@@ -99,7 +99,7 @@ public sealed class Domain1Tools
 
 - `src/` - `McpEndpointExtensions` 程式庫。
 - `samples/McpEndpointServer/` - 可執行的 ASP.NET Core 範例，用來示範多個 MCP endpoint。
-- `tests/` - 保留供測試使用。
+- `tests/` - endpoint options、route mapping、service registration，以及 MCP tool handler 行為的 MSTest 測試。
 
 ## 建置
 
