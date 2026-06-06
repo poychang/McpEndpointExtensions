@@ -14,6 +14,7 @@
         <Authors>poychang</Authors>
         <Description>ASP.NET Core extensions for hosting multiple Model Context Protocol (MCP) Streamable HTTP endpoints with route-level tool isolation.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>package-icon.png</PackageIcon>
         <PackageProjectUrl>https://github.com/poychang/McpEndpointExtensions</PackageProjectUrl>
         <RepositoryUrl>https://github.com/poychang/McpEndpointExtensions</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
@@ -34,6 +35,7 @@
         <None Include="..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\README.zh-tw.md" Pack="true" PackagePath="\" />
         <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\assets\package-icon_128x128.png" Pack="true" PackagePath="package-icon.png" />
     </ItemGroup>
 
 </Project>
