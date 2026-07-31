@@ -60,6 +60,20 @@ public sealed class McpEndpointToolOptionsTests
     }
 
     [TestMethod]
+    public void GetToolsForPath_ReturnsToolsForLongestMatchingPrefix()
+    {
+        var options = new McpEndpointToolOptions();
+        options.MapToolsToEndpoint("/domain1/mcp", [TestTools.Domain1A]);
+        options.MapToolsToEndpoint("/domain1/mcp/admin", [TestTools.Domain1B]);
+
+        var tools = options.GetToolsForPath(new PathString("/domain1/mcp/admin/messages"));
+
+        CollectionAssert.AreEqual(
+            new[] { TestTools.Domain1B },
+            tools.ToArray());
+    }
+
+    [TestMethod]
     public void MapToolsToEndpoint_ThrowsForInvalidArguments()
     {
         var options = new McpEndpointToolOptions();

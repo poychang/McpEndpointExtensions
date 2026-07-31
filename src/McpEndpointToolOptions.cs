@@ -39,17 +39,25 @@ public sealed class McpEndpointToolOptions
     /// Gets the tools registered for the endpoint that matches <paramref name="path"/>.
     /// </summary>
     /// <param name="path">The request path to resolve tools for.</param>
-    /// <returns>The tools registered for the matching endpoint, or an empty list when no endpoint matches.</returns>
+    /// <returns>
+    /// The tools registered for the matching endpoint, or an empty list when no endpoint matches. When several
+    /// registered patterns are prefixes of <paramref name="path"/>, the tools for the longest (most specific)
+    /// matching pattern are returned.
+    /// </returns>
     internal IReadOnlyList<McpServerTool> GetToolsForPath(PathString path)
     {
+        IReadOnlyList<McpServerTool>? bestMatch = null;
+        var bestMatchLength = -1;
+
         foreach (var (pattern, tools) in _toolsByPattern)
         {
-            if (path.StartsWithSegments(pattern))
+            if (path.StartsWithSegments(pattern) && pattern.Length > bestMatchLength)
             {
-                return tools;
+                bestMatch = tools;
+                bestMatchLength = pattern.Length;
             }
         }
 
-        return [];
+        return bestMatch ?? [];
     }
 }
