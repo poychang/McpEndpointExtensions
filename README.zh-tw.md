@@ -123,16 +123,18 @@ dotnet build ModelContextProtocol.slnx
 
 ### 必要的 GitHub 設定
 
-發佈前請先設定以下 secret：
+發佈使用 NuGet 信任發佈（OIDC），不使用長效 API key。請設定：
 
-- `NUGET_API_KEY`：具備套件推送權限的 NuGet API key。
+- `NUGET_USER`：以 GitHub environment secret 儲存的 NuGet 使用者名稱。
 
 建議設定流程：
 
 1. 建立名為 `nuget-publish` 的 GitHub environment。
-2. 將 `NUGET_API_KEY` 設定為 environment secret。
+2. 將 `NUGET_USER` 設定為 environment secret。在 nuget.org 設定此 repository 的信任發佈原則，指定 workflow 檔案 `publish-nuget.yml` 與 environment `nuget-publish`。
 3. 允許 `nuget-publish` environment 從 `v*` 發佈標籤部署。若設定必要審核者，自動發佈會暫停等待核准；若需要全自動發佈，請勿設定必要審核者。
 4. 允許 GitHub Actions 寫入 repository 內容並觸發 workflow。預設分支保護規則或 ruleset 必須允許此 workflow 提交驗證通過的版本更新及發佈標籤，否則推送會失敗且不會發佈。排程僅在此設定合併至預設分支後執行。
+
+手動指定版本時可加上 `v` 前綴。若既有版本標籤早於發佈 workflow 或版本腳本的變更，會建立新的 `v<version>-publish.<run-id>` 標籤來執行更新後的發佈設定，不會移動原標籤。NuGet 套件版本保持不變。
 
 ## 授權
 

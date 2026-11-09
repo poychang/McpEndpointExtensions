@@ -123,16 +123,18 @@ This repository publishes the package through GitHub Actions.
 
 ### Required GitHub configuration
 
-Add the following secret before publishing:
+Publishing uses NuGet trusted publishing (OIDC), not a long-lived API key. Configure:
 
-- `NUGET_API_KEY`: NuGet API key with package push permission.
+- `NUGET_USER`: NuGet username stored as a GitHub environment secret.
 
 Recommended setup path:
 
 1. Create a GitHub environment named `nuget-publish`.
-2. Add `NUGET_API_KEY` as an environment secret.
+2. Add `NUGET_USER` as an environment secret. On nuget.org, configure a trusted publishing policy for this repository, workflow file `publish-nuget.yml`, and environment `nuget-publish`.
 3. Allow the `nuget-publish` environment to deploy from `v*` release tags. Required reviewers pause automatic publishing until approval; omit reviewers if fully unattended publishing is desired.
 4. Allow GitHub Actions to write repository contents and dispatch workflows. Default-branch protection/rulesets must permit this workflow's validated version commits and release tags; otherwise the push fails and nothing is published. Scheduled workflows only run after this configuration is merged into the default branch.
+
+Manual versions accept an optional leading `v`. If the existing version tag predates changes to the publishing workflow or version script, a new `v<version>-publish.<run-id>` tag runs the updated publishing configuration without moving the original tag. The NuGet package version remains unchanged.
 
 ## License
 
