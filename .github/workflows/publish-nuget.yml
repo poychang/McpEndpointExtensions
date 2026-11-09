@@ -44,13 +44,13 @@ jobs:
           fi
           python3 .github/scripts/sync_mcp_version.py
 
-  publish:
+  prepare:
     needs: check-version
-    if: needs.check-version.outputs.should_publish == 'true' || needs.check-version.outputs.update_required == 'true'
+    if: github.ref_type == 'branch' && (needs.check-version.outputs.should_publish == 'true' || needs.check-version.outputs.update_required == 'true')
     runs-on: ubuntu-latest
-    environment: nuget-publish
     permissions:
       contents: write
+      actions: write
     env:
       PACKAGE_VERSION: ${{ needs.check-version.outputs.version }}
 
@@ -63,13 +63,12 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Check publishing credentials
-        if: needs.check-version.outputs.should_publish == 'true'
+      - name: Require default branch
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          if [[ -z "${NUGET_API_KEY}" ]]; then
-            echo "::error::Configure NUGET_API_KEY in the nuget-publish environment."
+          if [[ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]]; then
+            echo "::error::Automatic updates must run on the default branch."
             exit 1
           fi
 
@@ -98,10 +97,6 @@ jobs:
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          if [[ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]]; then
-            echo "::error::Automatic updates must run on the default branch."
-            exit 1
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/McpEndpointExtensions.csproj
@@ -109,8 +104,69 @@ jobs:
             -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
           git push origin "HEAD:${DEFAULT_BRANCH}"
 
-      - name: Push package to nuget.org
+      - name: Create release tag and dispatch publishing
         if: needs.check-version.outputs.should_publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG="v${PACKAGE_VERSION}"
+          REMOTE_SHA="$(git ls-remote --refs origin "refs/tags/${TAG}" | cut -f1)"
+          if [[ -n "${REMOTE_SHA}" ]]; then
+            git fetch --no-tags origin "refs/tags/${TAG}:refs/tags/${TAG}"
+            if [[ "$(git rev-parse "${TAG}^{commit}")" != "$(git rev-parse HEAD)" ]]; then
+              echo "::error::Existing tag ${TAG} does not point to the validated commit; resolve it manually."
+              exit 1
+            fi
+          else
+            git tag "${TAG}"
+            git push origin "refs/tags/${TAG}"
+          fi
+          gh workflow run publish-nuget.yml --ref "${TAG}"
+
+  publish:
+    needs: check-version
+    if: github.ref_type == 'tag' && needs.check-version.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: nuget-publish
+    env:
+      PACKAGE_VERSION: ${{ needs.check-version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check publishing credentials
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [[ -z "${NUGET_API_KEY}" ]]; then
+            echo "::error::Configure NUGET_API_KEY in the nuget-publish environment."
+            exit 1
+          fi
+
+      - name: Restore
+        run: dotnet restore ./ModelContextProtocol.slnx
+
+      - name: Build
+        run: dotnet build ./ModelContextProtocol.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ./ModelContextProtocol.slnx --configuration Release --no-build --no-restore
+
+      - name: Pack
+        run: |
+          dotnet pack ./src/McpEndpointExtensions.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts
+
+      - name: Push package to nuget.org
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |

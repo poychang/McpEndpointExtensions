@@ -117,9 +117,9 @@ This repository publishes the package through GitHub Actions.
 
 1. CI workflow (`.github/workflows/ci.yml`) runs on push/PR and performs restore, build, test, and pack checks.
 2. Publish workflow (`.github/workflows/publish-nuget.yml`) checks NuGet every Monday at 01:00 UTC (09:00 Taiwan time) for the latest stable `ModelContextProtocol.AspNetCore` release. GitHub may delay scheduled runs. Prereleases are excluded.
-3. If a newer version is available, it updates the shared project/dependency version, restores, builds, and tests the solution, and packs the library, then commits the validated version to the default branch and publishes to `https://api.nuget.org/v3/index.json`. Releases are serialized and never downgrade the dependency.
-4. If that package version is already published, it skips publishing. If a previous publish failed after committing the update, a later run retries the missing release. Build/test failures prevent both the commit and publication; incompatible upstream API changes require a manual fix.
-5. Manual dispatch with an empty version checks for updates immediately. A version tag (for example `v2.2.0`) or an explicit manual version must match the dependency version committed in the selected ref; arbitrary release versions are rejected.
+3. If a newer version is available, it updates the shared project/dependency version, restores, builds, and tests the solution, and packs the library, then commits the validated version to the default branch. For an unpublished version it creates a matching `v*` tag and dispatches a separate release run on that tag, which builds, tests, and publishes to `https://api.nuget.org/v3/index.json`. Releases are serialized and never downgrade the dependency.
+4. If that package version is already published, it skips publishing. If a previous publish failed after committing the update, a later run retries the missing release provided its tag still points to the validated commit. A conflicting tag stops the workflow for manual resolution. Build/test failures prevent publication; incompatible upstream API changes require a manual fix.
+5. Manual dispatch on the default branch with an empty version checks for updates immediately. A version tag (for example `v2.2.0`) or an explicit manual version must match the dependency version committed in the selected ref; arbitrary release versions are rejected.
 
 ### Required GitHub configuration
 
@@ -131,8 +131,8 @@ Recommended setup path:
 
 1. Create a GitHub environment named `nuget-publish`.
 2. Add `NUGET_API_KEY` as an environment secret.
-3. Allow the `nuget-publish` environment to deploy from the default branch and any release tags you use. Required reviewers pause automatic publishing until approval; omit reviewers if fully unattended publishing is desired.
-4. Allow GitHub Actions to write repository contents. Default-branch protection/rulesets must permit this workflow's validated version commits; otherwise the push fails and nothing is published. Scheduled workflows only run after this configuration is merged into the default branch.
+3. Allow the `nuget-publish` environment to deploy from `v*` release tags. Required reviewers pause automatic publishing until approval; omit reviewers if fully unattended publishing is desired.
+4. Allow GitHub Actions to write repository contents and dispatch workflows. Default-branch protection/rulesets must permit this workflow's validated version commits and release tags; otherwise the push fails and nothing is published. Scheduled workflows only run after this configuration is merged into the default branch.
 
 ## License
 
