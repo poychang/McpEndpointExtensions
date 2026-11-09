@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test version synchronization
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:

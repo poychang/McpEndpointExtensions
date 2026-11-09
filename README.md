@@ -12,7 +12,7 @@ Use it when a single MCP server needs route-level tool isolation, for example:
 
 ## Project Status
 
-This repository contains the library source, a runnable ASP.NET Core sample application, and MSTest coverage for the endpoint registration and per-route tool filtering behavior. The library targets `net8.0`, `net9.0`, and `net10.0`, and depends on `ModelContextProtocol.AspNetCore` `1.4.0`.
+This repository contains the library source, a runnable ASP.NET Core sample application, and MSTest coverage for the endpoint registration and per-route tool filtering behavior. The library targets `net8.0`, `net9.0`, and `net10.0`. Its package version and `ModelContextProtocol.AspNetCore` dependency share the `Version` property in `src/McpEndpointExtensions.csproj`.
 
 ## How It Works
 
@@ -116,8 +116,10 @@ The solution was validated with .NET SDK `10.0.300`.
 This repository publishes the package through GitHub Actions.
 
 1. CI workflow (`.github/workflows/ci.yml`) runs on push/PR and performs restore, build, test, and pack checks.
-2. Publish workflow (`.github/workflows/publish-nuget.yml`) runs when a version tag is pushed (for example `v1.2.3`) or via manual dispatch.
-3. The publish job uses `dotnet nuget push` against `https://api.nuget.org/v3/index.json`.
+2. Publish workflow (`.github/workflows/publish-nuget.yml`) checks NuGet every Monday at 01:00 UTC (09:00 Taiwan time) for the latest stable `ModelContextProtocol.AspNetCore` release. GitHub may delay scheduled runs. Prereleases are excluded.
+3. If a newer version is available, it updates the shared project/dependency version, restores, builds, and tests the solution, and packs the library, then commits the validated version to the default branch and publishes to `https://api.nuget.org/v3/index.json`. Releases are serialized and never downgrade the dependency.
+4. If that package version is already published, it skips publishing. If a previous publish failed after committing the update, a later run retries the missing release. Build/test failures prevent both the commit and publication; incompatible upstream API changes require a manual fix.
+5. Manual dispatch with an empty version checks for updates immediately. A version tag (for example `v2.2.0`) or an explicit manual version must match the dependency version committed in the selected ref; arbitrary release versions are rejected.
 
 ### Required GitHub configuration
 
@@ -129,7 +131,8 @@ Recommended setup path:
 
 1. Create a GitHub environment named `nuget-publish`.
 2. Add `NUGET_API_KEY` as an environment secret.
-3. Protect the environment with reviewers and/or branch-tag rules.
+3. Allow the `nuget-publish` environment to deploy from the default branch and any release tags you use. Required reviewers pause automatic publishing until approval; omit reviewers if fully unattended publishing is desired.
+4. Allow GitHub Actions to write repository contents. Default-branch protection/rulesets must permit this workflow's validated version commits; otherwise the push fails and nothing is published. Scheduled workflows only run after this configuration is merged into the default branch.
 
 ## License
 

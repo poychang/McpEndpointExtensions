@@ -1,23 +1,58 @@
 name: Publish NuGet
 
 on:
+  schedule:
+    - cron: "0 1 * * 1"
   push:
     tags:
       - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: "Package version without leading v (e.g., 1.2.3)"
-        required: true
+        description: "Version matching the MCP dependency; leave empty to check for updates"
+        required: false
         type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: nuget-publish
+  cancel-in-progress: false
+
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_publish: ${{ steps.version.outputs.should_publish }}
+      update_required: ${{ steps.version.outputs.update_required }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine package version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            export REQUESTED_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            export REQUESTED_VERSION="${INPUT_VERSION}"
+          fi
+          python3 .github/scripts/sync_mcp_version.py
+
   publish:
+    needs: check-version
+    if: needs.check-version.outputs.should_publish == 'true' || needs.check-version.outputs.update_required == 'true'
     runs-on: ubuntu-latest
     environment: nuget-publish
+    permissions:
+      contents: write
+    env:
+      PACKAGE_VERSION: ${{ needs.check-version.outputs.version }}
 
     steps:
       - name: Checkout
@@ -28,16 +63,19 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Determine package version
-        id: version
-        shell: bash
+      - name: Check publishing credentials
+        if: needs.check-version.outputs.should_publish == 'true'
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
-          else
-            PACKAGE_VERSION="${{ inputs.version }}"
+          if [[ -z "${NUGET_API_KEY}" ]]; then
+            echo "::error::Configure NUGET_API_KEY in the nuget-publish environment."
+            exit 1
           fi
-          echo "version=${PACKAGE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Update MCP dependency and package version
+        if: needs.check-version.outputs.update_required == 'true'
+        run: python3 .github/scripts/sync_mcp_version.py --apply-version "${PACKAGE_VERSION}"
 
       - name: Restore
         run: dotnet restore ./ModelContextProtocol.slnx
@@ -53,9 +91,26 @@ jobs:
           dotnet pack ./src/McpEndpointExtensions.csproj \
             --configuration Release \
             --no-build \
-            --output ./artifacts \
-            -p:PackageVersion=${{ steps.version.outputs.version }}
+            --output ./artifacts
+
+      - name: Persist validated version update
+        if: needs.check-version.outputs.update_required == 'true'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]]; then
+            echo "::error::Automatic updates must run on the default branch."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/McpEndpointExtensions.csproj
+          git commit -m "chore: update ModelContextProtocol.AspNetCore to ${PACKAGE_VERSION}" \
+            -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          git push origin "HEAD:${DEFAULT_BRANCH}"
+
       - name: Push package to nuget.org
+        if: needs.check-version.outputs.should_publish == 'true'
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |

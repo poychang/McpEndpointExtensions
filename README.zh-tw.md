@@ -12,7 +12,7 @@ McpEndpointExtensions 是一個小型 ASP.NET Core 擴充程式庫，可讓單�
 
 ## 專案狀態
 
-此 repository 包含程式庫原始碼、可執行的 ASP.NET Core 範例應用程式，以及用於 endpoint 註冊與依路由篩選工具行為的 MSTest 測試。程式庫目標框架為 `net8.0`、`net9.0`、`net10.0`，並依賴 `ModelContextProtocol.AspNetCore` `1.4.0`。
+此 repository 包含程式庫原始碼、可執行的 ASP.NET Core 範例應用程式，以及用於 endpoint 註冊與依路由篩選工具行為的 MSTest 測試。程式庫目標框架為 `net8.0`、`net9.0`、`net10.0`。套件發佈版本與 `ModelContextProtocol.AspNetCore` 相依套件版本共用 `src/McpEndpointExtensions.csproj` 中的 `Version` 屬性。
 
 ## 運作方式
 
@@ -116,8 +116,10 @@ dotnet build ModelContextProtocol.slnx
 此 repository 透過 GitHub Actions 發佈套件。
 
 1. CI workflow (`.github/workflows/ci.yml`) 會在 push/PR 時執行 restore、build、test 與 pack 檢查。
-2. 發佈 workflow (`.github/workflows/publish-nuget.yml`) 會在推送版本 tag（例如 `v1.2.3`）或手動觸發時執行。
-3. 發佈作業使用 `dotnet nuget push` 發佈到 `https://api.nuget.org/v3/index.json`。
+2. 發佈 workflow (`.github/workflows/publish-nuget.yml`) 每週一 UTC 01:00（台灣時間 09:00）檢查 NuGet 上最新的 `ModelContextProtocol.AspNetCore` 穩定版本。GitHub 排程可能延遲執行，且不採用預覽版本。
+3. 若有較新版本，會更新共用的專案與相依套件版本，執行 restore、build、test 與 pack，再將驗證通過的版本提交至預設分支，並發佈到 `https://api.nuget.org/v3/index.json`。發佈作業依序執行，且不會降版。
+4. 若該套件版本已發佈，則略過發佈。若先前已提交更新但發佈失敗，後續執行會重試尚未發佈的版本。建置或測試失敗時不會提交或發佈；上游 API 不相容的變更需要手動修正。
+5. 手動觸發時將版本留空，可立即檢查更新。版本 tag（例如 `v2.2.0`）或手動指定的版本必須與所選 ref 中已提交的相依套件版本一致，不允許任意指定發佈版本。
 
 ### 必要的 GitHub 設定
 
@@ -129,7 +131,8 @@ dotnet build ModelContextProtocol.slnx
 
 1. 建立名為 `nuget-publish` 的 GitHub environment。
 2. 將 `NUGET_API_KEY` 設定為 environment secret。
-3. 為該 environment 設定審核者與/或分支、標籤保護規則。
+3. 允許 `nuget-publish` environment 從預設分支及使用的發佈標籤部署。若設定必要審核者，自動發佈會暫停等待核准；若需要全自動發佈，請勿設定必要審核者。
+4. 允許 GitHub Actions 寫入 repository 內容。預設分支保護規則或 ruleset 必須允許此 workflow 提交驗證通過的版本更新，否則推送會失敗且不會發佈。排程僅在此設定合併至預設分支後執行。
 
 ## 授權
 
