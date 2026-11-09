@@ -57,6 +57,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -114,10 +116,12 @@ jobs:
           REMOTE_SHA="$(git ls-remote --refs origin "refs/tags/${TAG}" | cut -f1)"
           if [[ -n "${REMOTE_SHA}" ]]; then
             git fetch --no-tags origin "refs/tags/${TAG}:refs/tags/${TAG}"
-            if [[ "$(git rev-parse "${TAG}^{commit}")" != "$(git rev-parse HEAD)" ]]; then
-              echo "::error::Existing tag ${TAG} does not point to the validated commit; resolve it manually."
+            if ! git merge-base --is-ancestor "${TAG}^{commit}" HEAD; then
+              echo "::error::Existing tag ${TAG} is not an ancestor of the validated commit; resolve it manually."
               exit 1
             fi
+            git show "${TAG}:src/McpEndpointExtensions.csproj" > "${RUNNER_TEMP}/release-project.csproj"
+            python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, ".github/scripts"); import sync_mcp_version as sync; actual = sync.current_version(Path(sys.argv[1])); expected = sys.argv[2]; sys.exit(f"Existing tag has version {actual}, expected {expected}") if actual != expected else None' "${RUNNER_TEMP}/release-project.csproj" "${PACKAGE_VERSION}"
           else
             git tag "${TAG}"
             git push origin "refs/tags/${TAG}"
